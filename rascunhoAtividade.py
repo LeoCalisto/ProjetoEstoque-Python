@@ -23,14 +23,18 @@ def menu():
     print(' ************************ ')
 
 
-def alterar(indice, coluna,dado):
+def alterar(indice, coluna, dado):
     comando = f'UPDATE produto SET {coluna} = "{dado}" WHERE id = {indice}'
     cursor.execute(comando)
     conexao.commit()
 
 
-item = {}
-estoque = []
+def produtos():
+    comando = 'SELECT * FROM produto'
+    cursor.execute(comando)
+    produtos = cursor.fetchall()
+    return produtos
+
 val = True
 
 # Apresentação do sistema
@@ -64,15 +68,12 @@ while val == True:
 
     # Escopo para retorno de estoque armazenado na lista > dicicionário
     if opcao == 2:
-        comando = 'SELECT * FROM produto'
-        cursor.execute(comando)
-        produtos = cursor.fetchall()
-        if len(produtos) == 0:
+        if len(produtos()) == 0:
             print('\nEstoque vazio !!')
             sleep(1)
         else:
             print(f'\n{"Cod"} {"Nome":<15} {"Modelo":<15} {"Fabricante":<15} {"Valor":<15} {"Quantidade":<}')
-            for item in produtos:
+            for item in produtos():
                 print(
                     f'{item[0]:<3} {item[1]:<15} {item[2]:<15} {item[3]:<15} R$ {item[4]:<12} '
                     f'{item[5]:<}')
@@ -82,26 +83,18 @@ while val == True:
                     val = False
                     break
                 if escolha == '0':
-                    val = True
                     break
 
-    #Escopo para impressão do estoque e escolha do item e atributo a ser alterado diretamente no dict
+    # Escopo para impressão do estoque e escolha do item e atributo a ser alterado diretamente no dict
     if opcao == 3:
-        comando = 'SELECT * FROM produto'
-        cursor.execute(comando)
-        produtos = cursor.fetchall()
-        if len(produtos) == 0:
+        if len(produtos()) == 0:
             print('\nEstoque vazio !!')
             sleep(1)
         else:
-
             while True:
-                comando = 'SELECT * FROM produto'
-                cursor.execute(comando)
-                produtos = cursor.fetchall()
                 print('Itens cadastrados:')
                 print(f'\n{"Cod"} {"Nome":<15} {"Modelo":<15} {"Fabricante":<15} {"Valor":<15} {"Quantidade":<}')
-                for item in produtos:
+                for item in produtos():
                     print(
                         f'{item[0]:<3} {item[1]:<15} {item[2]:<15} {item[3]:<15} R$ {item[4]:<12} '
                         f'{item[5]:<}')
@@ -109,7 +102,8 @@ while val == True:
                 if cod == 0:
                     break
 
-                atributo = int(input('Qual atributo quer modificar? 1 -Nome 2-Modelo 3-Fabricante 4-Valor 5-Quantidade '))
+                atributo = int(
+                    input('Qual atributo quer modificar? 1 -Nome 2-Modelo 3-Fabricante 4-Valor 5-Quantidade '))
                 if atributo == 1:
                     novonome = str(input('Novo nome: '))
                     alterar(cod, "nome", novonome)
@@ -130,19 +124,16 @@ while val == True:
                     quantidade = int(input('Nova Quantidade: '))
                     alterar(cod, "quantidade", quantidade)
 
-    #Escopo para deletar o conjunto de atributos do produto na lista > dict
+    # Escopo para deletar o conjunto de atributos do produto na lista > dict
     if opcao == 4:
-        comando = 'SELECT * FROM produto'
-        cursor.execute(comando)
-        produtos = cursor.fetchall()
-        if len(produtos) == 0:
+        if len(produtos()) == 0:
             print('\nEstoque vazio !!')
             sleep(1)
         else:
             pos = int(input('Informe o Código do item? '))
             print(f'\n{"Cod"} {"Nome":<15} {"Modelo":<15} {"Fabricante":<15} {"Valor":<15} {"Quantidade"::<}')
             print(
-                f'{produtos[pos-1][0]:<3} {produtos[pos-1][1]:<15} {produtos[pos-1][2]:<15} {produtos[pos-1][3]:<15} R$ {produtos[pos-1][4]:<15} {produtos[pos-1][5]:<12}')
+                f'{produtos()[pos - 1][0]:<3} {produtos()[pos - 1][1]:<15} {produtos()[pos - 1][2]:<15} {produtos()[pos - 1][3]:<15} R$ {produtos()[pos - 1][4]:<15} {produtos()[pos - 1][5]:<12}')
             confirmar = ' '
             while confirmar not in 'SsNn':
                 confirmar = str(input('\nConfirmar exlusão? S/N '))
