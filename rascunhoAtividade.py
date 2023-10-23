@@ -91,12 +91,13 @@ while val == True:
                     f'{item[0]:<3} {item[1]:<15} {item[2]:<15} {item[3]:<15} R$ {item[4]:<12} '
                     f'{item[5]:<}')
             while True:
-                escolha = str(input('\n00 - Sair 0 - Retornar ao Menu '))
-                if escolha == '00':
+                escolha = int(input('\n0 - Sair 1 - Retornar ao Menu '))
+                if escolha == 0:
                     val = False
                     break
-                if escolha == '0':
+                if escolha == 1:
                     break
+                print('\nValor digitado não corresponde')
 
     # Escopo para impressão do estoque e escolha do item e atributo a ser alterado diretamente no dict
     if opcao == 3:
@@ -164,4 +165,4 @@ while val == True:
         val = False
 
 conexao.close()
-print('\nOBRIGADO !!')
+print('\nVolte Sempre !!')
