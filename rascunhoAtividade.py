@@ -4,7 +4,6 @@ import mysql.connector
 conexao = mysql.connector.connect(host='localhost', user='root', password='m741a123', database='estoque')
 cursor = conexao.cursor()
 
-
 def layout():
     print(' ****************************************** ')
     print(' ***         Bem Vindo ao Simat          ** ')
@@ -23,7 +22,7 @@ def menu():
     print(' ************************ ')
 
 
-def alterar(indice, coluna, dado):
+def alterar(indice, colunas, dado):
     comando = f'UPDATE produto SET {coluna} = "{dado}" WHERE id = {indice}'
     cursor.execute(comando)
     conexao.commit()
@@ -34,6 +33,7 @@ def produtos():
     cursor.execute(comando)
     produtos = cursor.fetchall()
     return produtos
+
 
 val = True
 
@@ -57,10 +57,23 @@ while val == True:
             nome = str(input('\n\nNome do item: '))
             modelo = str(input('Modelo do item: '))
             fabricante = str(input('Fabricante do item: '))
-            valor = float(input('Valor do item: '))
-            quantidade = int(input('Qtd do item: '))
+            while ValueError:
+                try:
+                    valor = float(input('Valor do item: '))
+                except ValueError:
+                    print('ERRO com o valor digitado, insira um número positivo')
+                else:
+                    break
+            while ValueError:
+                try:
+                    quantidade = int(input('Qtd do item: '))
+                except ValueError:
+                    print('ERRO com o valor digitado, insira um número positivo')
+                else:
+                    break
             continuar = str(input('\nContinuar cadastrando? S/N'))
-            comando = f'INSERT INTO produto(nome, fabricante, modelo, VALOR, quantidade) VALUES ("{nome}", "{modelo}", "{fabricante}", {valor}, {quantidade})'
+            comando = (f'''INSERT INTO produto(nome, fabricante, modelo, VALOR, quantidade) 
+                        VALUES ("{nome}", "{modelo}", "{fabricante}", {valor}, {quantidade})''')
             cursor.execute(comando)
             conexao.commit()
             if continuar in 'Nn':
@@ -131,9 +144,12 @@ while val == True:
             sleep(1)
         else:
             pos = int(input('Informe o Código do item? '))
-            print(f'\n{"Cod"} {"Nome":<15} {"Modelo":<15} {"Fabricante":<15} {"Valor":<15} {"Quantidade"::<}')
-            print(
-                f'{produtos()[pos - 1][0]:<3} {produtos()[pos - 1][1]:<15} {produtos()[pos - 1][2]:<15} {produtos()[pos - 1][3]:<15} R$ {produtos()[pos - 1][4]:<15} {produtos()[pos - 1][5]:<12}')
+            print(f'\n{"Cod":<14} {"Nome":<14} {"Modelo":<14} {"Fabricante":<14} {"Valor":<14} {"Quantidade"::<}')
+            comando = f'SELECT * FROM produto WHERE id="{pos}"'
+            cursor.execute(comando)
+            linha = cursor.fetchone()
+            for coluna in linha:
+                print(f'{coluna:<15}', end='')
             confirmar = ' '
             while confirmar not in 'SsNn':
                 confirmar = str(input('\nConfirmar exlusão? S/N '))
@@ -147,4 +163,5 @@ while val == True:
     if opcao == 0:
         val = False
 
+conexao.close()
 print('\nOBRIGADO !!')
