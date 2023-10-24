@@ -22,8 +22,15 @@ def menu():
     print(' ************************ ')
 
 
+def consultaId(referencia):
+    comando = f'SELECT id FROM produto WHERE id = "{referencia}"'
+    cursor.execute(comando)
+    ids = cursor.fetchone()
+    return ids
+
+
 def alterar(indice, colunas, dado):
-    comando = f'UPDATE produto SET {coluna} = "{dado}" WHERE id = {indice}'
+    comando = f'UPDATE produto SET {colunas} = "{dado}" WHERE id = {indice}'
     cursor.execute(comando)
     conexao.commit()
 
@@ -44,38 +51,51 @@ for i in range(0, 5):
     print('.', end='', flush=True)
     sleep(0.5)
 
-# Loop de retono ao menu com validação de opção escolhida
+# Loop principal de retono ao menu inicial
 while val == True:
     menu()
-    opcao = int(input('Qual opção deseja? '))
-    while opcao != 1 and opcao != 2 and opcao != 0 and opcao != 4 and opcao != 3:
-        opcao = int(input('Qual opção deseja? '))
+    # Validação de opção escolhida apresentando erro interpretado ao inserir str ou espaços
+    while True:
+        try:
+            opcao = int(input('Qual opção deseja? '))
+        except ValueError:
+            print('Número invalido, digite apenas inteiros positivos')
+        else:
+            if -1 < opcao < 5:
+                break
+            else:
+                print('\nNúmero não se encontra no menu')
+                continue
 
-    # Escopo de cadastro de atributos do item em um dicionário
+    # Escopo de cadastro do intem no BD
     if opcao == 1:
+        # Loop para continuação de multiplos cadastros
         while True:
             nome = str(input('\n\nNome do item: '))
             modelo = str(input('Modelo do item: '))
             fabricante = str(input('Fabricante do item: '))
-            while ValueError:
+            # Validação de dado compativel com float/ int em valor e quantidade do item
+            while True:
                 try:
                     valor = float(input('Valor do item: '))
                 except ValueError:
                     print('ERRO com o valor digitado, insira um número positivo')
                 else:
                     break
-            while ValueError:
+            while True:
                 try:
                     quantidade = int(input('Qtd do item: '))
                 except ValueError:
                     print('ERRO com o valor digitado, insira um número positivo')
                 else:
                     break
-            continuar = str(input('\nContinuar cadastrando? S/N'))
+            # Comando SQL para iserção do dado no BD
             comando = (f'''INSERT INTO produto(nome, fabricante, modelo, VALOR, quantidade) 
                         VALUES ("{nome}", "{modelo}", "{fabricante}", {valor}, {quantidade})''')
             cursor.execute(comando)
             conexao.commit()
+            # Confirmação de continuação do cadastro
+            continuar = str(input('\nContinuar cadastrando? S/N'))
             if continuar in 'Nn':
                 break
 
@@ -97,7 +117,7 @@ while val == True:
                     break
                 if escolha == 1:
                     break
-                print('\nValor digitado não corresponde')
+                print('\nValor digitado não corresponde, digite apenas 0 ou 1.')
 
     # Escopo para impressão do estoque e escolha do item e atributo a ser alterado diretamente no dict
     if opcao == 3:
@@ -109,13 +129,24 @@ while val == True:
                 print('Itens cadastrados:')
                 print(f'\n{"Cod"} {"Nome":<15} {"Modelo":<15} {"Fabricante":<15} {"Valor":<15} {"Quantidade":<}')
                 for item in produtos():
-                    print(
-                        f'{item[0]:<3} {item[1]:<15} {item[2]:<15} {item[3]:<15} R$ {item[4]:<12} '
-                        f'{item[5]:<}')
-                cod = int(input('\nInforme o código do item: [00 - Menu Principal] '))
+                    print(f'''
+                        {item[0]:<3} {item[1]:<15} {item[2]:<15} {item[3]:<15} R$ {item[4]:<12}
+                        {item[5]:<}''')
+                while True:
+                    try:
+                        cod = int(input('\nInforme o código do item: [0 - Menu Principal] '))
+                    except ValueError:
+                        print('Valor digitado é inválido, insira um número inteiro positivo')
+                        continue
+                    if cod == 0:
+                        break
+                    if consultaId(cod) is None:
+                        print('\nCódigo não encontrado !')
+                        continue
+                    else:
+                        break
                 if cod == 0:
                     break
-
                 atributo = int(
                     input('Qual atributo quer modificar? 1 -Nome 2-Modelo 3-Fabricante 4-Valor 5-Quantidade '))
                 if atributo == 1:
@@ -144,9 +175,9 @@ while val == True:
             print('\nEstoque vazio !!')
             sleep(1)
         else:
-            pos = int(input('Informe o Código do item? '))
+            ref = int(input('Informe o Código do item? '))
             print(f'\n{"Cod":<14} {"Nome":<14} {"Modelo":<14} {"Fabricante":<14} {"Valor":<14} {"Quantidade"::<}')
-            comando = f'SELECT * FROM produto WHERE id="{pos}"'
+            comando = f'SELECT * FROM produto WHERE id="{ref}"'
             cursor.execute(comando)
             linha = cursor.fetchone()
             for coluna in linha:
@@ -155,14 +186,12 @@ while val == True:
             while confirmar not in 'SsNn':
                 confirmar = str(input('\nConfirmar exlusão? S/N '))
                 if confirmar in 'Ss':
-                    comando = f'DELETE FROM produto WHERE id = {pos}'
+                    comando = f'DELETE FROM produto WHERE id = {ref}'
                     cursor.execute(comando)
                     conexao.commit()
                     print('\nItem Excluido !')
                     sleep(1)
-
     if opcao == 0:
         val = False
-
 conexao.close()
 print('\nVolte Sempre !!')
