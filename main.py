@@ -4,12 +4,13 @@ from tkinter import messagebox
 from datetime import datetime #usado para pegar a data e hora atual e inserir no formulário
 import view #modulo com as funções de BD
 import sqlite3
+import pandas as pd
 
 
 try:
     view.criar()
 except sqlite3.OperationalError:
-    print('ok')
+    pass
 finally:
 
     ####Paleta de cores###
@@ -143,6 +144,8 @@ finally:
                     view.inserir_dados(lista)
 
                     messagebox.showinfo('Sucesso', 'Produto cadastrado com Sucesso!')
+                    
+                    tree.bind("<Double-1>", lambda atualizar: atualizar_main())  
                 
             #Limpar os campos do formulário, do início ao fim
                 
@@ -153,13 +156,13 @@ finally:
                 entry_quantidade.delete(0, END)
 
             #função para reinserir os dados, nesse caso vai vir atualizado com o dado inserido
-            mostrar()
+            mostrar_pesquisa()
 
     #Limpar a barra de pesquisa de itens
 
     def limpar_pesquisa():
         entry_pesquisa.delete(0, END)
-        mostrar()
+        mostrar_pesquisa()
 
     #Função para atualizar o item selecionado na lista
 
@@ -214,16 +217,21 @@ finally:
                             view.atualizar_dados(lista)
                         
                             messagebox.showinfo('Sucesso', 'Produto atualizado com Sucesso!')
+                            
                             entry_nome.delete(0,END)
                             entry_modelo.delete(0,END)
                             entry_fabricante.delete(0,END)
                             entry_custo.delete(0,END)
                             entry_quantidade.delete(0,END)
-                    mostrar()
-                    
-            button_confirmar = Button(frame_baixo, text='Confirmar',font=("Arial 10 bold"), width=12, bg="yellow", fg=co0, command=lambda:(atualizar(), limpar_pesquisa()))
-            button_confirmar.place(x=240, y=351)
-                
+                            
+                            button_confirmar.destroy() #apagar botão confirmar
+                            
+                            
+                    mostrar_pesquisa()
+
+            button_confirmar = Button(frame_baixo, text='Confirmar',font=("Arial 10 bold"), width=19, bg="yellow", fg=co0, command=lambda:(atualizar(), limpar_pesquisa()))
+            button_confirmar.place(x=182, y=351)
+            
                 
         except IndexError:
             messagebox.showerror('Erro', 'Selecione um dos itens na tabela')
@@ -240,7 +248,13 @@ finally:
             if msg_box == 'yes':
                 view.deletar_dados(codigo)
                 messagebox.showinfo('Sucesso', 'Produto excluído com sucesso!')
-            mostrar()
+                limpar()
+            else:
+                pass
+                
+            mostrar_pesquisa()
+            
+            tree.bind("<Double-1>", lambda atualizar: atualizar_main())
             
         except IndexError:
             
@@ -256,53 +270,14 @@ finally:
         entry_quantidade.delete(0,END)
 
     #Botões do formulário
-    button_cadastrar = Button(frame_baixo, text='Cadastrar', font=("Arial 10 bold"), width=12, bg=co2, fg=co1, command=inserir)
-    button_cadastrar.place(x=10, y=315)
+    button_cadastrar = Button(frame_baixo, text='Cadastrar', font=("Arial 10 bold"), width=19, bg=co2, fg=co1, command=inserir)
+    button_cadastrar.place(x=13, y=315)
 
-    button_alterar = Button(frame_baixo, text='Alterar',font=("Arial 10 bold"), width=12, bg="yellow", fg=co0, command=atualizar_main)
-    button_alterar.place(x=125, y=315)
+    button_remover = Button(frame_baixo, text='Remover',font=("Arial 10 bold"), width=19, bg="red", fg=co1, command=delete_item )
+    button_remover.place(x=183, y=315)
 
-    button_remover = Button(frame_baixo, text='Remover',font=("Arial 10 bold"), width=12, bg="red", fg=co1, command=delete_item )
-    button_remover.place(x=240, y=315)
-
-    button_limpar = Button(frame_baixo, text = "Limpar Campos", font=("Arial 10 bold"), width=26, fg=co1, bg="grey" , command=limpar)
-    button_limpar.place(x=11, y=351)
-
-    def mostrar():
-        
-        global tree
-        
-        ##### importando a lista da view e inserindo na tabela ###
-        lista = view.acessar_dados()
-
-        #cabeçalho da lista
-        cabecalho = ['Código', 'Nome do Produto','Modelo', 'Fabricante', 'Custo', 'Qtd', 'Data']
-
-        #configurações de scrollbar da lista
-        tree = ttk.Treeview(frame_direita, selectmode='extended', columns=cabecalho, show='headings')
-        vsb = ttk.Scrollbar(frame_direita, orient='vertical', command=tree.yview)
-        hsb = ttk.Scrollbar(frame_direita, orient='horizontal', command=tree.xview)
-        tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
-
-        tree.grid(column=0, row=0, sticky='nsew')
-        vsb.grid(column=1, row=0, sticky='ns')
-        hsb.grid(column=0, row=1, sticky='ew')
-        frame_direita.grid_rowconfigure(0, weight = 12)
-
-        #alinhamento do texto de cabeçalho
-        align_cabecalho = ["center","nw","center","nw","center","center","center"]
-
-        #tamanho do texto de cabeçalho, por item
-        size_cabecalho_item = [80,170,80,100,50,60,110]
-        na = 0
-
-        for col in cabecalho:
-            tree.heading(col, text=col.title(), anchor=CENTER)
-            tree.column(col, width=size_cabecalho_item[na], anchor = align_cabecalho[na])
-            na += 1
-
-        for item in lista:
-            tree.insert('','end', values=item)
+    button_limpar = Button(frame_baixo, text = "Limpar Campos", font=("Arial 10 bold"), width=19, fg=co1, bg="grey" , command=limpar)
+    button_limpar.place(x=13, y=351)
             
     def mostrar_pesquisa():
         
@@ -341,17 +316,23 @@ finally:
 
         for item in lista:
             tree.insert('','end', values=item)
+        
+        tree.bind("<Double-1>", lambda atualizar: atualizar_main())  
+        
+    button_limpar_pesquisa = Button(frame_direita_cima, width=9, text="Limpar", command=lambda:(data_atual(),limpar_pesquisa()))
+    button_limpar_pesquisa.place(x=490, y=12) 
 
-            
-    button_pesquisa = Button(frame_direita_cima, width=8, text="Pesquisar", command=mostrar_pesquisa)
-    button_pesquisa.place(x=490, y=12)
-
-    button_limpar_pesquisa = Button(frame_direita_cima, width=6, text="Limpar", command=lambda:(data_atual(),limpar_pesquisa()))
-    button_limpar_pesquisa.place(x=560, y=12) 
-
-    button_exportar = Button(frame_direita_cima, width=6, text="Exportar", bg="darkgreen", fg="white")
-    button_exportar.place(x=615, y=12)
-
-    mostrar()
-
+    def export_excel():
+        pesquisa = entry_pesquisa.get()
+        view.exportar_excel(pesquisa)
+        messagebox.showinfo('Exportação de Relatório', 'O relatório foi salvo com sucesso!')
+        
+    button_exportar = Button(frame_direita_cima, width=9, text="Exportar", bg="darkgreen", fg="white", command=export_excel)
+    button_exportar.place(x=575, y=12)
+    #Usando o parametro do KeyRelease (quando uma tecla é solta)
+    entry_pesquisa.bind("<KeyRelease>", lambda pesquisa: mostrar_pesquisa()) 
+    mostrar_pesquisa()
+    
+    tree.bind("<Double-1>", lambda atualizar: atualizar_main())
+    
     janela.mainloop()
